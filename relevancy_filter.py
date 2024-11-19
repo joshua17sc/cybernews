@@ -1,35 +1,46 @@
-import openai
 import os
+from openai import OpenAI
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Initialize the OpenAI client
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY")  # Get API key from environment variable
+)
 
 def filter_top_articles(articles):
-    # Create the conversation messages to pass to the model
+    # Create messages to pass to the model for scoring
     messages = [
-        {"role": "system", "content": "You are a helpful assistant that selects the most relevant cybersecurity news articles based on their content."}
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that selects the most relevant cybersecurity news articles based on their content."
+        }
     ]
 
-    # Add each article as a separate message
     for i, article in enumerate(articles):
         messages.append(
-            {"role": "user", "content": f"Article {i+1}:\nTitle: {article['title']}\nSummary: {article['summary']}\n"}
+            {
+                "role": "user",
+                "content": f"Article {i + 1}:\nTitle: {article['title']}\nSummary: {article['summary']}\n"
+            }
         )
 
-    # Add the final request for scoring
-    messages.append({"role": "user", "content": "Please provide a score for each article from 1 to 10 based on how relevant it is to current cybersecurity trends. Provide the scores in the format: 'Article X: Score'."})
-
-    # Request a response from the model
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        max_tokens=150,
-        temperature=0.7
+    messages.append(
+        {
+            "role": "user",
+            "content": "Please provide a score for each article from 1 to 10 based on how relevant it is to current cybersecurity trends. Provide the scores in the format: 'Article X: Score'."
+        }
     )
 
-    # Extract scores from the response
+    # Make the request to create the chat completion
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=messages,
+    )
+
+    # Extract the response text
     scores_text = response['choices'][0]['message']['content'].strip().split("\n")
     scores = {}
 
+    # Process the response to extract scores
     for line in scores_text:
         parts = line.split(":")
         if len(parts) == 2:
@@ -37,7 +48,7 @@ def filter_top_articles(articles):
             score = int(parts[1].strip())
             scores[article_index] = score
 
-    # Sort articles based on their scores
+    # Sort the articles based on the scores and select the top 8
     sorted_articles = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     top_articles = [articles[i] for i, _ in sorted_articles[:8]]
 
