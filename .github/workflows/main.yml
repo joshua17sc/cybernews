@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "Installing dependencies..."
           python -m pip install --upgrade pip
-          pip install feedparser newspaper3k lxml[html_clean] openai google-cloud-texttospeech requests
+          pip install feedparser newspaper3k lxml[html_clean] anthropic google-cloud-texttospeech requests
           echo "Dependencies installed successfully."
 
       - name: Collect News

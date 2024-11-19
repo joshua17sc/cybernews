@@ -1,46 +1,32 @@
 import os
-from openai import OpenAI
+import anthropic
 
-# Initialize the OpenAI client
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")  # Get API key from environment variable
-)
+# Set your Claude API key
+claude_api_key = os.getenv("CLAUDE_API_KEY")
+client = anthropic.Anthropic(api_key=claude_api_key)
 
 def filter_top_articles(articles):
-    # Create messages to pass to the model for scoring
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful assistant that selects the most relevant cybersecurity news articles based on their content."
-        }
-    ]
+    # Construct the prompt for Claude
+    prompt = "You are an AI assistant tasked with ranking cybersecurity news articles. Rate each article based on its relevance to current cybersecurity trends, from 1 to 10.\n\n"
 
     for i, article in enumerate(articles):
-        messages.append(
-            {
-                "role": "user",
-                "content": f"Article {i + 1}:\nTitle: {article['title']}\nSummary: {article['summary']}\n"
-            }
-        )
+        prompt += f"Article {i + 1}:\nTitle: {article['title']}\nSummary: {article['summary']}\n\n"
 
-    messages.append(
-        {
-            "role": "user",
-            "content": "Please provide a score for each article from 1 to 10 based on how relevant it is to current cybersecurity trends. Provide the scores in the format: 'Article X: Score'."
-        }
-    )
+    prompt += "Please provide a score for each article in the format: 'Article X: Score'."
 
-    # Make the request to create the chat completion
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=messages,
+    # Send the request to Claude for completion
+    response = client.completions.create(
+        model="claude-2",
+        prompt=prompt,
+        max_tokens_to_sample=150,
+        temperature=0.7,
     )
 
     # Extract the response text
-    scores_text = response['choices'][0]['message']['content'].strip().split("\n")
+    scores_text = response["completion"].strip().split("\n")
     scores = {}
 
-    # Process the response to extract scores
+    # Parse the response to extract scores
     for line in scores_text:
         parts = line.split(":")
         if len(parts) == 2:
@@ -48,7 +34,7 @@ def filter_top_articles(articles):
             score = int(parts[1].strip())
             scores[article_index] = score
 
-    # Sort the articles based on the scores and select the top 8
+    # Sort the articles based on scores and select the top 8
     sorted_articles = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     top_articles = [articles[i] for i, _ in sorted_articles[:8]]
 
