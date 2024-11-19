@@ -11,41 +11,64 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
-        
+        uses: actions/checkout@v3
+
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Install Dependencies
         run: |
+          echo "Installing dependencies..."
           python -m pip install --upgrade pip
-          pip install feedparser newspaper3k openai google-cloud-texttospeech requests
+          pip install feedparser newspaper3k lxml[html_clean] openai google-cloud-texttospeech requests
+          echo "Dependencies installed successfully."
 
       - name: Collect News
-        run: python news_collector.py
+        run: |
+          echo "Starting news collection..."
+          python news_collector.py
+          echo "Finished news collection."
 
       - name: Filter Top Articles
-        run: python relevancy_filter.py
+        run: |
+          echo "Starting article filtering..."
+          python relevancy_filter.py
+          echo "Finished article filtering."
 
       - name: Summarize News
-        run: python summarizer.py
+        run: |
+          echo "Starting news summarization..."
+          python summarizer.py
+          echo "Finished news summarization."
 
       - name: Create Medium Post
         env:
           MEDIUM_API_TOKEN: ${{ secrets.MEDIUM_API_TOKEN }}
-        run: python medium_post_creator.py
+        run: |
+          echo "Creating Medium post..."
+          python medium_post_creator.py
+          echo "Medium post created successfully."
 
       - name: Generate Podcast Script
-        run: python podcast_script_generator.py
+        run: |
+          echo "Generating podcast script..."
+          python podcast_script_generator.py
+          echo "Podcast script generated successfully."
 
       - name: Record Podcast
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python podcast_recorder.py
+        run: |
+          echo "Recording podcast..."
+          python podcast_recorder.py
+          echo "Podcast recorded successfully."
 
       - name: Upload Podcast
         env:
           PODBEAN_ACCESS_TOKEN: ${{ secrets.PODBEAN_ACCESS_TOKEN }}
-        run: python podcast_uploader.py
+        run: |
+          echo "Uploading podcast to Podbean..."
+          python podcast_uploader.py
+          echo "Podcast uploaded successfully."
