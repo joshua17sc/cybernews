@@ -13,7 +13,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+        uses: actions/checkout@v3
+
       - name: Set up Python
+        uses: actions/setup-python@v4
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
@@ -24,6 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install feedparser newspaper3k lxml[html_clean] openai google-cloud-texttospeech requests
           echo "Dependencies installed successfully."
+          pip install feedparser newspaper3k lxml[html_clean] openai google-cloud-texttospeech requests
 
       - name: Collect News
         run: |
@@ -72,3 +76,7 @@ jobs:
           echo "Uploading podcast to Podbean..."
           python podcast_uploader.py
           echo "Podcast uploaded successfully."
+        run: |
+          echo "Starting news collection..."
+          python news_collector.py
+          echo "Finished news collection."
